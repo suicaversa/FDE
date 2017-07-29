@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>FacebookDataExtractor(FDE)</title>
+</head>
+<body>
+  <h1>FDE</h1>
+  <% if session['access_token'] %>
+    You are logged in! <a href="/logout">Logout</a>
+  <% end %>
+
+  <% if session['access_token'].nil? %>
+    <a href="/login">Login</a>
+  <% end %>
+</body>
+</html>
