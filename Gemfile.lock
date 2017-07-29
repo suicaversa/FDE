@@ -5,6 +5,8 @@ GEM
       public_suffix (~> 2.0, >= 2.0.2)
     byebug (9.0.6)
     dotenv (2.2.1)
+    emk-sinatra-url-for (0.2.1)
+      sinatra (>= 0.9.1.1)
     faraday (0.12.2)
       multipart-post (>= 1.2, < 3)
     json (2.1.0)
@@ -31,6 +33,7 @@ PLATFORMS
 DEPENDENCIES
   byebug
   dotenv
+  emk-sinatra-url-for
   koala
   sinatra
 
