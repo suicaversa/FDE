@@ -9,6 +9,13 @@ class SNSDataExtractor < Sinatra::Application
   FB_PERMISSIONS = "user_posts,user_photos"
   FB_FETCH_FIELDS = "attachments,message,created_time,place"
 
+  connection = Fog::Storage.new({
+    provider:              'AWS',
+    aws_access_key_id:     ENV['AWS_ACCESS_KEY'],
+    aws_secret_access_key: ENV['AWS_ACCESS_SECRET'],
+    region: "ap-northeast-1"
+  })
+
   before do
      pass if ([nil]+%w[login logout callback]).include? request.path_info.split('/')[1]
      if session[:access_token].nil?
@@ -22,18 +29,11 @@ class SNSDataExtractor < Sinatra::Application
   end
 
   get '/list' do
-    @files = Dir.glob("./user-data/#{session[:user_id]}_*").map do |f|
-      File.basename(f)
-    end
+    directory = connection.directories.get(ENV['AWS_S3_BUCKET'], prefix: session[:user_id])
+    @files = directory.nil? ? [] : directory.files
 
     erb :list, layout: false
   end
-
-  get '/download/:filename' do
-    content_type 'Application/octet-stream'
-    send_file("./user-data/#{params[:filename]}")
-  end
-
 
   get '/fetch' do
     if !params[:query].nil? || !params[:page].nil?
@@ -54,9 +54,14 @@ class SNSDataExtractor < Sinatra::Application
 
     pretty_json = JSON.pretty_generate(@results)
 
-    File.open("./user-data/#{session[:user_id]}_#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json", "w") do |f|
-      f.puts pretty_json
-    end
+    directory = connection.directories.get(ENV['AWS_S3_BUCKET'])
+
+    file = directory.files.new({
+      :key    => "#{session[:user_id]}/#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json",
+      :body   => pretty_json,
+      :public => true
+    })
+    file.save
 
     flash[:notice] = "Successfully generated."
     redirect '/'

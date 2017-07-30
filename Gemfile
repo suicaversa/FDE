@@ -8,6 +8,8 @@ gem "sinatra"
 gem "dotenv"
 gem "koala"
 gem "sinatra-flash"
+gem "fog"
+gem "mime-types"
 
 group :development do
   gem "byebug"
