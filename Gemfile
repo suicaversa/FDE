@@ -7,6 +7,7 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 gem "sinatra"
 gem "dotenv"
 gem "koala"
+gem "sinatra-flash"
 
 group :development do
   gem "byebug"

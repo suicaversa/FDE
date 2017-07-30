@@ -7,6 +7,7 @@
   <title>FacebookDataExtractor(FDE)</title>
 </head>
 <body>
+  <%= styled_flash %>
   <h1>FDE</h1>
   <% if session['access_token'] %>
     You are logged in! <a href="/logout">Logout</a>
@@ -17,29 +18,18 @@
   <% end %>
 
   <% if session['access_token'] %>
-  <form class="query" method="get">
-    <input type="date" name="post_since" value="<%= params[:post_since] || (Date.today - 30).to_s %>">
-    <input type="date" name="post_until" value="<%= params[:post_until] || (Date.today).to_s %>">
-    <button>取得</button>
-  </form>
+    <form class="query" method="get" action="/fetch.json">
+      <input type="date" name="query[since]" value="<%= (params[:query] && params[:query][:since]) || (Date.today - 30).to_s %>">
+      <input type="date" name="query[until]" value="<%= (params[:query] && params[:query][:until]) || (Date.today).to_s %>">
+      <button>取得</button>
+    </form>
 
-  <div class="result" style="border:1px solid #ddd;font-size:10px;">
+
     <% if !@results.nil? %>
-      <p>Fetched: <%= @results.count %> items. </p>
-      <ul>
-        <% @results.each do |r| %>
-          <li><%= r %></li>
-        <% end %>
-      </ul>
-      <% if !@results.previous_page_params.nil? %>
-        <a href="./?page=<%= URI.escape(@results.previous_page_params.to_json) %>">Previous</a>
-      <% end %>
-
-      <% if !@results.next_page_params.nil? %>
-        <a href="./?page=<%= URI.escape(@results.next_page_params.to_json) %>">Next</a>
-      <% end %>
+      <div class="result" style="border:1px solid #ddd;font-size:10px;">
+          <p>Fetched: <%= @results.count %> items. </p>
+      </div>
     <% end %>
-  </div>
   <% end %>
 </body>
 </html>
