@@ -21,7 +21,21 @@ class SNSDataExtractor < Sinatra::Application
     erb :index
   end
 
-  get '/fetch.json' do
+  get '/list' do
+    @files = Dir.glob("./user-data/#{session[:user_id]}_*").map do |f|
+      File.basename(f)
+    end
+
+    erb :list, layout: false
+  end
+
+  get '/download/:filename' do
+    content_type 'Application/octet-stream'
+    send_file("./user-data/#{params[:filename]}")
+  end
+
+
+  get '/fetch' do
     if !params[:query].nil? || !params[:page].nil?
       @graph = getGraphAPIObject
 
@@ -40,11 +54,12 @@ class SNSDataExtractor < Sinatra::Application
 
     pretty_json = JSON.pretty_generate(@results)
 
-    File.open("./user-data/#{session[:user_id]}_#{Time.now.to_i}.json", "w") do |f|
+    File.open("./user-data/#{session[:user_id]}_#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json", "w") do |f|
       f.puts pretty_json
     end
-    content_type 'Application/octet-stream'
-    pretty_json
+
+    flash[:notice] = "Successfully generated."
+    redirect '/'
   end
 
   get '/login' do
