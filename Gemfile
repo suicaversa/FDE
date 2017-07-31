@@ -10,6 +10,8 @@ gem "koala"
 gem "sinatra-flash"
 gem "fog"
 gem "mime-types"
+gem "eventmachine"
+gem "thin"
 
 group :development do
   gem "byebug"

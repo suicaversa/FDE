@@ -36,34 +36,35 @@ class SNSDataExtractor < Sinatra::Application
   end
 
   get '/fetch' do
-    if !params[:query].nil? || !params[:page].nil?
-      @graph = getGraphAPIObject
+    EM::defer do
+      if !params[:query].nil? || !params[:page].nil?
+        @graph = getGraphAPIObject
 
-      @graph_result = params[:page] ? @graph.get_page(JSON.parse(params[:page])) :
-                                 @graph.get_connections("me", "posts",
-                                    params[:query].merge({limit: FB_FETCH_LIMIT, fields: FB_FETCH_FIELDS})
-                                  )
-      @results = @graph_result.to_a
+        @graph_result = params[:page] ? @graph.get_page(JSON.parse(params[:page])) :
+                                   @graph.get_connections("me", "posts",
+                                      params[:query].merge({limit: FB_FETCH_LIMIT, fields: FB_FETCH_FIELDS})
+                                    )
+        @results = @graph_result.to_a
+      end
+
+      while !(next_results = @graph_result.next_page).nil? do
+        @results += next_results.to_a
+        @graph_result = next_results
+      end
+      # NGだったら再試行を3回ぐらいやって、駄目なら取れたところまでで返す。
+
+      pretty_json = JSON.pretty_generate(@results)
+
+      directory = connection.directories.get(ENV['AWS_S3_BUCKET'])
+
+      file = directory.files.new({
+        :key    => "#{session[:user_id]}/#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json",
+        :body   => pretty_json,
+        :public => true
+      })
+      file.save
     end
-
-    while !(next_results = @graph_result.next_page).nil? do
-      @results += next_results.to_a
-      @graph_result = next_results
-    end
-    # NGだったら再試行を3回ぐらいやって、駄目なら取れたところまでで返す。
-
-    pretty_json = JSON.pretty_generate(@results)
-
-    directory = connection.directories.get(ENV['AWS_S3_BUCKET'])
-
-    file = directory.files.new({
-      :key    => "#{session[:user_id]}/#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json",
-      :body   => pretty_json,
-      :public => true
-    })
-    file.save
-
-    flash[:notice] = "Successfully generated."
+    flash[:notice] = "Successfully generating. It may take awhile."
     redirect '/'
   end
 
