@@ -4,101 +4,19 @@
 
 
 <% if session['access_token'] %>
-  You are logged in! <a href="/logout">Logout</a>
+  <section class="search-panel">
+    You are logged in! <a href="/logout">Logout</a>
+    <form class="query" method="get" action="/fetch">
+      Since:<input type="date" name="query[since]" value="<%= (params[:query] && params[:query][:since]) || (Date.today - 30).to_s %>"> <br>
+      Until:<input type="date" name="query[until]" value="<%= (params[:query] && params[:query][:until]) || (Date.today).to_s %>">
+      <button>取得</button>
+    </form>
+    <div class="filelist"></div>
+  </section>
+  <section class="map-panel">
+    <div id="map"></div>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=<%= ENV['GOOGLE_MAP_APIKEY']%>&callback=initialize">
+    </script>
+  </section>
 <% end %>
-
-
-<% if session['access_token'] %>
-  <form class="query" method="get" action="/fetch">
-    <input type="date" name="query[since]" value="<%= (params[:query] && params[:query][:since]) || (Date.today - 30).to_s %>">
-    <input type="date" name="query[until]" value="<%= (params[:query] && params[:query][:until]) || (Date.today).to_s %>">
-    <button>取得</button>
-  </form>
-
-  <div class="filelist"></div>
-
-  <style>
-     #map {
-      height: 600px;
-      width: 100%;
-     }
-  </style>
-  <div id="map"></div>
-  <script>
-    var map = null;
-    function initialize(){
-      map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 4,
-        center: {lat: 35.679801, lng: 139.739525}
-      });
-    }
-    $(function(){
-
-
-        function initMap(url) {
-          var mapDatas = [];
-          var currentInfoWindow = null;
-          $.ajax({
-            dataType: "json",
-            url: url
-          }).done(function(datas){
-            $.each(datas, function(k, data){
-              mapDatas.push({
-                created_time: data["created_time"],
-                message: data["message"] || "",
-                name: data["name"],
-                latitude: data["latitude"],
-                longitude: data["longitude"],
-                images: data["images"]
-              });
-            });
-            console.log("MapAjax: Successfully fetched.");
-            var centerPin = {lat: mapDatas[0]["latitude"], lng: mapDatas[0]["longitude"]}
-
-            $.each(mapDatas, function(k, mapData){
-              var infowindow = new google.maps.InfoWindow({
-                content: mapData["message"].replace(/\n/, "<br>") + mapData["images"].join("<br>")
-              });
-
-              var marker = new google.maps.Marker({
-                position: {lat: mapData["latitude"], lng: mapData["longitude"]},
-                map: map,
-                title: mapData["name"]
-              });
-              marker.addListener('click', function() {
-                if(currentInfoWindow) currentInfoWindow.close();
-                currentInfoWindow = infowindow;
-                infowindow.open(map, marker);
-              });
-            });
-
-          }).fail(function( jqXHR, textStatus ) {
-            console.log( "MapAjax: Request failed: " + textStatus );
-          });;
-        }
-
-        $(document).on('click', '.map-item', function(){
-          var url = $(this).data("url");
-          console.log(url);
-          initMap(url);
-        });
-      });
-      </script>
-
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=<%= ENV['GOOGLE_MAP_APIKEY']%>&callback=initialize">
-  </script>
-<% end %>
-
-<script>
-  $(function(){
-      $.ajax({
-        url: "./list"
-      }).done(function(data){
-        $('.filelist').html(data);
-        console.log("Ajax: Successfully fetched.");
-      }).fail(function( jqXHR, textStatus ) {
-        console.log( "Ajax: Request failed: " + textStatus );
-      });;
-  });
-</script>

@@ -9,10 +9,19 @@
   src="//code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">
+  <script src="/js/main.js" charset="utf-8"></script>
 </head>
 <body>
-  <%= styled_flash %>
-  <h1>FDE</h1>
-  <%= yield %>
+  <header>
+    <h1 class="site-title">FDE</h1>
+  </header>
+  <div class="flash-panel">
+    <%= styled_flash %>
+  </div>
+  <div class="control-panel">
+    <%= yield %>
+  </div>
 </body>
 </html>
