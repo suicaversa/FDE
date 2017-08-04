@@ -11,7 +11,22 @@
       Until:<input type="date" name="query[until]" value="<%= (params[:query] && params[:query][:until]) || (Date.today).to_s %>">
       <button>取得</button>
     </form>
-    <div class="filelist"></div>
+    <div class="filelist">
+      <div class="lds-css">
+        <div class="lds-gear" style="100%;height:100%">
+          <div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
   <section class="map-panel">
     <div id="map"></div>
