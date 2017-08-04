@@ -28,6 +28,7 @@
     $(function(){
         function initMap(url) {
           var mapDatas = [];
+          var currentInfoWindow = null;
           $.ajax({
             dataType: "json",
             url: url
@@ -60,6 +61,8 @@
                 title: mapData["name"]
               });
               marker.addListener('click', function() {
+                if(currentInfoWindow) currentInfoWindow.close();
+                currentInfoWindow = infowindow;
                 infowindow.open(map, marker);
               });
             });
