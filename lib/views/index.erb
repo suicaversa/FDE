@@ -15,7 +15,71 @@
     <button>取得</button>
   </form>
 
-  <ul class="filelist"></ul>
+  <div class="filelist"></div>
+
+  <style>
+     #map {
+      height: 600px;
+      width: 100%;
+     }
+  </style>
+  <div id="map"></div>
+  <script>
+    $(function(){
+        function initMap(url) {
+          var mapDatas = [];
+          $.ajax({
+            dataType: "json",
+            url: url
+          }).done(function(datas){
+            $.each(datas, function(k, data){
+              mapDatas.push({
+                created_time: data["created_time"],
+                message: data["message"] || "",
+                name: data["name"],
+                latitude: data["latitude"],
+                longitude: data["longitude"],
+                images: data["images"]
+              });
+            });
+            console.log("MapAjax: Successfully fetched.");
+            var centerPin = {lat: mapDatas[0]["latitude"], lng: mapDatas[0]["longitude"]}
+            var map = new google.maps.Map(document.getElementById('map'), {
+              zoom: 4,
+              center: centerPin
+            });
+
+            $.each(mapDatas, function(k, mapData){
+              var infowindow = new google.maps.InfoWindow({
+                content: mapData["message"].replace(/\n/, "<br>") + mapData["images"].join("<br>")
+              });
+
+              var marker = new google.maps.Marker({
+                position: {lat: mapData["latitude"], lng: mapData["longitude"]},
+                map: map,
+                title: mapData["name"]
+              });
+              marker.addListener('click', function() {
+                infowindow.open(map, marker);
+              });
+            });
+
+          }).fail(function( jqXHR, textStatus ) {
+            console.log( "MapAjax: Request failed: " + textStatus );
+          });;
+        }
+
+        $(document).on('click', '.map-item', function(){
+          var url = $(this).data("url");
+          console.log(url);
+          initMap(url);
+        });
+      });
+      </script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=<%= ENV['GOOGLE_MAP_APIKEY']%>">
+    </script>
 <% end %>
 
 <script>

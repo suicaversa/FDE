@@ -1,3 +1,11 @@
-<% @files.each do |f| %>
-<li><a href="<%= f.public_url %>"><%= f.key %></a></li>
-<% end %>
+<ul>
+  <% @raw_files.each do |f| %>
+  <li><a href="<%= f.public_url %>"><%= f.key %></a></li>
+  <% end %>
+</ul>
+
+<ul class="map-items">
+  <% @map_files.each do |f| %>
+  <li class="map-item" data-url="<%= f.public_url %>" style="text-decoration:underline; color:blue;"><%= f.key %></li>
+  <% end %>
+</ul>
