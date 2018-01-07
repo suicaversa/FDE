@@ -51,3 +51,6 @@ build-iPhoneSimulator/
 
 .byebug_history
 /user-data/*.json
+
+# mac
+.DS_Store
