@@ -87,7 +87,7 @@ class SNSDataExtractor < Sinatra::Application
                 s["media"]["image"]["src"] if !s["media"].nil? && !s["media"]["image"].nil?
               end if !sa["subattachments"].nil?
               result
-            end.compact.flatten.map{|i| "<img src=\"#{i}\">"}
+            end.compact.flatten
           }
       end
 
