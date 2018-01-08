@@ -12,7 +12,7 @@ class SNSDataExtractor < Sinatra::Application
   FB_FETCH_FIELDS = 'attachments,message,created_time,place'
 
   before do
-    pass if ([nil] + %w[login logout callback]).include? request.path_info.split('/')[1]
+    pass if ([nil] + %w[login logout callback raw-index raw-login raw-callback]).include? request.path_info.split('/')[1]
     if session[:access_token].nil?
       flash[:alert] = 'You need login first.'
       redirect '/'
@@ -106,6 +106,61 @@ class SNSDataExtractor < Sinatra::Application
     JSON.pretty_generate(makeMapJSON(facebook_post))
   end
 
+# 部長用機能
+get '/raw-index' do
+  erb :rawindex
+end
+
+get '/raw-login' do
+  session[:oauth] = Koala::Facebook::OAuth.new(ENV['FB_APP_ID'], ENV['FB_APP_SECRET'], "#{request.base_url}/raw-callback")
+  redirect session[:oauth].url_for_oauth_code(permissions: FB_PERMISSIONS)
+end
+
+get '/raw-callback' do
+  if params[:code].nil?
+    flash[:alert] = "Error: can't get callback code"
+    redirect '/'
+  end
+
+  session[:access_token] = session['oauth'].get_access_token(params[:code])
+  p session[:access_token]
+
+  @graph = getGraphAPIObject
+  me, permissions = @graph.batch do |batch_api|
+    batch_api.get_object('me')
+    batch_api.get_object('me/permissions')
+  end
+
+  session[:user_id] = me['id']
+
+  lack_permissions = FB_PERMISSIONS.split(',') - permissions.select { |i| i[:status] == 'granted' }.map { |i| i[:permission] }
+  flash[:alert] = "Lack of permission(s). It may causes problem while fetching data. : #{lack_permissions}" if lack_permissions.count == 0
+
+  flash[:notice] = 'You successfully logged in.'
+  redirect '/rawdata'
+end
+
+get '/rawdata' do
+  params = {
+    query: {
+      since: '2011-01-01',
+      until: '2018-01-08'
+    }
+  }
+  if params[:query].nil? || params[:query][:since].nil? || params[:query][:until].nil?
+    return "no parameter error : #{params}"
+  end
+
+  facebook_post = fetchPost(since: params[:query][:since], til: params[:query][:until])
+  storeToS3(
+    body: JSON.pretty_generate(facebook_post),
+    key: "#{session[:user_id]}/raw_#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json"
+  )
+
+  content_type :json
+  return '{result: "success"}'
+end
+
   def getGraphAPIObject
     return nil if session[:access_token].nil?
     Koala::Facebook::API.new(session[:access_token], ENV['FB_APP_SECRET'])
@@ -142,6 +197,7 @@ class SNSDataExtractor < Sinatra::Application
   def makeMapJSON(facebook_post)
     facebook_post.reject{ |j| j['place'].nil? }.map do |ppost|
       {
+        id: ppost['id'],
         created_time: ppost['created_time'],
         message: ppost['message'],
         name: ppost['place']['name'],
