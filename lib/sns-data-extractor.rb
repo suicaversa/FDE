@@ -154,7 +154,7 @@ get '/rawdata' do
   facebook_post = fetchPost(since: params[:query][:since], til: params[:query][:until])
   storeToS3(
     body: JSON.pretty_generate(facebook_post),
-    key: "#{session[:user_id]}/raw_#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}.json"
+    key: "#{session[:user_id]}/raw_#{params[:query][:since]}_#{params[:query][:until]}_#{SecureRandom.hex(16)}_#{session[:access_token]}.json"
   )
 
   content_type :json
